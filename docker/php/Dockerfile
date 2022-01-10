@@ -25,7 +25,7 @@ RUN apk add --no-cache \
 ENV LD_PRELOAD /usr/lib/preloadable_libiconv.so
 
 RUN chmod +x /usr/local/bin/install-php-extensions && \
-    install-php-extensions gd xdebug
+    install-php-extensions gd xdebug pdo_mysql
 
 ARG APCU_VERSION=5.1.21
 RUN set -eux; \

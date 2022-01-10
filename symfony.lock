@@ -88,6 +88,12 @@
     "laminas/laminas-code": {
         "version": "4.5.1"
     },
+    "league/csv": {
+        "version": "9.8.0"
+    },
+    "nikic/php-parser": {
+        "version": "v4.13.2"
+    },
     "psr/cache": {
         "version": "1.0.1"
     },
@@ -184,6 +190,15 @@
     },
     "symfony/http-kernel": {
         "version": "v5.4.2"
+    },
+    "symfony/maker-bundle": {
+        "version": "1.36",
+        "recipe": {
+            "repo": "github.com/symfony/recipes",
+            "branch": "master",
+            "version": "1.0",
+            "ref": "fadbfe33303a76e25cb63401050439aa9b1a9c7f"
+        }
     },
     "symfony/polyfill-intl-grapheme": {
         "version": "v1.24.0"
