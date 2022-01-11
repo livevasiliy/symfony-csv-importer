@@ -1,0 +1,7 @@
+parameters:
+    level: 9
+    paths:
+        - src
+    scanDirectories:
+        - var/cache/dev/Symfony/Config
+    checkGenericClassInNonGenericObjectType: false

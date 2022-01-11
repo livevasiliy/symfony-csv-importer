@@ -1,12 +1,19 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Entity;
 
 use App\Repository\TblProductDataRepository;
+use DateTime;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 
 /**
- * @ORM\Table(name="tblProductData", uniqueConstraints={@ORM\UniqueConstraint(name="strProductCode", columns={"strProductCode"})})
+ * @ORM\Table(
+ * name="tblProductData", uniqueConstraints={@ORM\UniqueConstraint(name="strProductCode", columns={"strProductCode"})})
+ * )
+ * @UniqueEntity(fields={"strProductCode"})
  * @ORM\Entity(repositoryClass=TblProductDataRepository::class)
  */
 class TblProductData
@@ -14,163 +21,214 @@ class TblProductData
     /**
      * @var int
      *
-     * @ORM\Column(name="intProductDataId", type="integer", nullable=false, options={"unsigned"=true})
+     * @ORM\Column(name="intProductDataId", type="integer", nullable=false, options={"unsigned": true})
      * @ORM\Id
      * @ORM\GeneratedValue(strategy="IDENTITY")
      */
-    private $intproductdataid;
+    private int $intProductDataId;
 
     /**
      * @var string
      *
      * @ORM\Column(name="strProductName", type="string", length=50, nullable=false)
      */
-    private $strproductname;
+    private string $strProductName;
 
     /**
      * @var string
      *
      * @ORM\Column(name="strProductDesc", type="string", length=255, nullable=false)
      */
-    private $strproductdesc;
+    private string $strProductDesc;
 
     /**
      * @var string
      *
-     * @ORM\Column(name="strProductCode", type="string", length=10, nullable=false)
+     * @ORM\Column(name="strProductCode", type="string", length=10, unique=true, nullable=false)
      */
-    private $strproductcode;
+    private string $strProductCode;
 
     /**
-     * @var \DateTime|null
+     * @var DateTime|null
      *
-     * @ORM\Column(name="dtmAdded", type="datetime", nullable=true, options={"default"="NULL"})
+     * @ORM\Column(name="dtmAdded", type="datetime", nullable=true, options={"default": "NULL"})
      */
-    private $dtmadded = 'NULL';
+    private ?DateTime $dtmAdded = null;
 
     /**
-     * @var \DateTime|null
+     * @var DateTime|null
      *
-     * @ORM\Column(name="dtmDiscontinued", type="datetime", nullable=true, options={"default"="NULL"})
+     * @ORM\Column(name="dtmDiscontinued", type="datetime", nullable=true, options={"default": "NULL"})
      */
-    private $dtmdiscontinued = 'NULL';
+    private ?DateTime $dtmDiscontinued = null;
 
     /**
-     * @var \DateTime
+     * @var DateTime
      *
-     * @ORM\Column(name="stmTimestamp", type="datetime", nullable=false, options={"default"="current_timestamp()"})
+     * @ORM\Column(name="stmTimestamp", type="datetime", nullable=false, options={"default": "current_timestamp()"})
      */
-    private $stmtimestamp = 'current_timestamp()';
+    private DateTime $stmTimestamp;
+
+    /**
+     * @ORM\Column(name="cost", type="decimal", scale=2, precision=10)
+     *
+     * @var float
+     */
+    private float $cost;
+
+    /**
+     * @ORM\Column(name="stock", type="integer", nullable=true)
+     *
+     * @var int|null
+     */
+    private ?int $stock;
+
+    /**
+     * @return float
+     */
+    public function getCost(): float
+    {
+        return $this->cost;
+    }
+
+    /**
+     * @param float $cost
+     */
+    public function setCost(float $cost): void
+    {
+        $this->cost = $cost;
+    }
+
+    /**
+     * @return int|null
+     */
+    public function getStock(): ?int
+    {
+        return $this->stock;
+    }
+
+    /**
+     * @param int|null $stock
+     */
+    public function setStock(?int $stock): void
+    {
+        $this->stock = $stock;
+    }
+
+    public function __construct()
+    {
+        $this->stmTimestamp = new DateTime();
+    }
 
     /**
      * @return int
      */
-    public function getIntproductdataid(): int
+    public function getIntProductDataId(): int
     {
-        return $this->intproductdataid;
+        return $this->intProductDataId;
     }
 
     /**
-     * @param int $intproductdataid
+     * @param int $intProductDataId
      */
-    public function setIntproductdataid(int $intproductdataid): void
+    public function setIntProductDataId(int $intProductDataId): void
     {
-        $this->intproductdataid = $intproductdataid;
-    }
-
-    /**
-     * @return string
-     */
-    public function getStrproductname(): string
-    {
-        return $this->strproductname;
-    }
-
-    /**
-     * @param string $strproductname
-     */
-    public function setStrproductname(string $strproductname): void
-    {
-        $this->strproductname = $strproductname;
+        $this->intProductDataId = $intProductDataId;
     }
 
     /**
      * @return string
      */
-    public function getStrproductdesc(): string
+    public function getStrProductName(): string
     {
-        return $this->strproductdesc;
+        return $this->strProductName;
     }
 
     /**
-     * @param string $strproductdesc
+     * @param string $strProductName
      */
-    public function setStrproductdesc(string $strproductdesc): void
+    public function setStrProductName(string $strProductName): void
     {
-        $this->strproductdesc = $strproductdesc;
+        $this->strProductName = $strProductName;
     }
 
     /**
      * @return string
      */
-    public function getStrproductcode(): string
+    public function getStrProductDesc(): string
     {
-        return $this->strproductcode;
+        return $this->strProductDesc;
     }
 
     /**
-     * @param string $strproductcode
+     * @param string $strProductDesc
      */
-    public function setStrproductcode(string $strproductcode): void
+    public function setStrProductDesc(string $strProductDesc): void
     {
-        $this->strproductcode = $strproductcode;
+        $this->strProductDesc = $strProductDesc;
     }
 
     /**
-     * @return \DateTime|null
+     * @return string
      */
-    public function getDtmadded(): \DateTime|string|null
+    public function getStrProductCode(): string
     {
-        return $this->dtmadded;
+        return $this->strProductCode;
     }
 
     /**
-     * @param \DateTime|null $dtmadded
+     * @param string $strProductCode
      */
-    public function setDtmadded(\DateTime|string|null $dtmadded): void
+    public function setStrProductCode(string $strProductCode): void
     {
-        $this->dtmadded = $dtmadded;
+        $this->strProductCode = $strProductCode;
     }
 
     /**
-     * @return \DateTime|null
+     * @return DateTime|null
      */
-    public function getDtmdiscontinued(): \DateTime|string|null
+    public function getDtmAdded(): ?DateTime
     {
-        return $this->dtmdiscontinued;
+        return $this->dtmAdded;
     }
 
     /**
-     * @param \DateTime|null $dtmdiscontinued
+     * @param DateTime|null $dtmAdded
      */
-    public function setDtmdiscontinued(\DateTime|string|null $dtmdiscontinued): void
+    public function setDtmAdded(?DateTime $dtmAdded): void
     {
-        $this->dtmdiscontinued = $dtmdiscontinued;
+        $this->dtmAdded = $dtmAdded;
     }
 
     /**
-     * @return \DateTime
+     * @return DateTime|null
      */
-    public function getStmtimestamp(): \DateTime|string
+    public function getDtmDiscontinued(): ?DateTime
     {
-        return $this->stmtimestamp;
+        return $this->dtmDiscontinued;
     }
 
     /**
-     * @param \DateTime $stmtimestamp
+     * @param DateTime|null $dtmDiscontinued
      */
-    public function setStmtimestamp(\DateTime|string $stmtimestamp): void
+    public function setDtmDiscontinued(?DateTime $dtmDiscontinued): void
     {
-        $this->stmtimestamp = $stmtimestamp;
+        $this->dtmDiscontinued = $dtmDiscontinued;
+    }
+
+    /**
+     * @return DateTime
+     */
+    public function getStmTimestamp(): DateTime
+    {
+        return $this->stmTimestamp;
+    }
+
+    /**
+     * @param DateTime $stmTimestamp
+     */
+    public function setStmTimestamp(DateTime $stmTimestamp): void
+    {
+        $this->stmTimestamp = $stmTimestamp;
     }
 }

@@ -4,7 +4,7 @@
     "minimum-stability": "stable",
     "prefer-stable": true,
     "require": {
-        "php": ">=8.0",
+        "php": ">=7.4",
         "ext-ctype": "*",
         "ext-iconv": "*",
         "composer/package-versions-deprecated": "1.11.99.4",
@@ -14,17 +14,22 @@
         "league/csv": "^9.8",
         "symfony/console": "5.4.*",
         "symfony/dotenv": "5.4.*",
+        "symfony/filesystem": "5.4.*",
         "symfony/flex": "^1.17|^2",
         "symfony/framework-bundle": "5.4.*",
+        "symfony/http-client": "5.4.*",
         "symfony/proxy-manager-bridge": "5.4.*",
         "symfony/runtime": "5.4.*",
-        "symfony/yaml": "5.4.*"
+        "symfony/validator": "5.4.*",
+        "symfony/yaml": "5.4.*",
+        "thecodingmachine/safe": "^1.3"
     },
     "config": {
         "allow-plugins": {
             "composer/package-versions-deprecated": true,
             "symfony/flex": true,
-            "symfony/runtime": true
+            "symfony/runtime": true,
+            "phpstan/extension-installer": true
         },
         "optimize-autoloader": true,
         "preferred-install": {
@@ -69,6 +74,15 @@
         }
     },
     "require-dev": {
-        "symfony/maker-bundle": "^1.36"
+        "phpstan/extension-installer": "^1.1",
+        "phpstan/phpstan": "^1.3",
+        "phpstan/phpstan-phpunit": "^1.0",
+        "phpstan/phpstan-strict-rules": "^1.1",
+        "phpstan/phpstan-symfony": "^1.0",
+        "phpstan/phpstan-webmozart-assert": "^1.0",
+        "povils/phpmnd": "^2.5",
+        "sebastian/phpcpd": "^6.0",
+        "symfony/maker-bundle": "^1.36",
+        "thecodingmachine/phpstan-strict-rules": "^1.0"
     }
 }

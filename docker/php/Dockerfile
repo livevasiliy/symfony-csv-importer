@@ -3,7 +3,7 @@
 # https://docs.docker.com/compose/compose-file/#target
 
 # https://docs.docker.com/engine/reference/builder/#understand-how-arg-and-from-interact
-ARG PHP_VERSION=8.1
+ARG PHP_VERSION=7.4
 
 # "php" stage
 FROM php:${PHP_VERSION}-fpm-alpine AS symfony_php

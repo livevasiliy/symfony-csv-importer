@@ -1,7 +1,8 @@
 .env
-
+.php-cs-fixer.cache
 .vscode
 .idea
+tools/*/vendor
 
 ###> symfony/framework-bundle ###
 /.env.local
