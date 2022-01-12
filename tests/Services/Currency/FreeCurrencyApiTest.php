@@ -32,9 +32,8 @@ class FreeCurrencyApiTest extends TestCase
             'response_headers' => ['Content-Type' => 'application/json']
         ]);
 
-        $mockHttpClient = new MockHttpClient($mockResponse, 'https://freecurrencyapi.net/api/v2/');
+        $mockHttpClient = new MockHttpClient($mockResponse);
         $mockHttpClient->withOptions([
-            'base_uri' => 'https://freecurrencyapi.net/api/v2/',
             'headers' => [
                 'Content-Type' => 'application/json',
                 'Accept' => 'application/json',
