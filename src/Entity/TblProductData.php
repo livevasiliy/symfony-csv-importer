@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Entity;
 
 use App\Repository\TblProductDataRepository;
-use DateTimeImmutable;
 use DateTimeInterface;
 use Doctrine\ORM\Mapping as ORM;
 use Gedmo\Mapping\Annotation as Gedmo;
@@ -65,7 +64,7 @@ class TblProductData
     private ?DateTimeInterface $dtmDiscontinued;
 
     /**
-     * @var DateTimeImmutable
+     * @var DateTimeInterface
      *
      * @ORM\Column(name="stmTimestamp", type="datetime", nullable=false, options={"default": "current_timestamp()"})
      * @Gedmo\Timestampable(on="create")
