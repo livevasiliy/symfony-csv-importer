@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Command;
 
+use App\DTO\TblProductDataDTO;
 use App\Entity\TblProductData;
 use App\Repository\TblProductDataRepository;
 use App\Services\Currency\FreeCurrencyApi;
@@ -20,9 +21,13 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Filesystem\Filesystem;
 use function in_array;
 use function count;
+use function clearSymbols;
+use function containSymbols;
 
 class ImportProductCsvCommand extends Command
 {
+    // TODO: Cover mock tests
+
     private const MINIMUM_COST = 5;
     private const MINIMUM_STOCK = 10;
     private const HIGH_COST = 1000;
@@ -30,27 +35,27 @@ class ImportProductCsvCommand extends Command
     protected static $defaultName = 'app:import-products:csv';
     protected static $defaultDescription = 'Import products from CSV';
 
-    private TblProductDataRepository $productDataRepository;
     private FreeCurrencyApi $currencyConverter;
     private ProductManager $productManager;
 
-    public function __construct(ProductManager $productManager, TblProductDataRepository $productDataRepository, FreeCurrencyApi $currencyConverter)
+    public function __construct(ProductManager $productManager, FreeCurrencyApi $currencyConverter)
     {
         parent::__construct();
 
-        $this->productDataRepository = $productDataRepository;
         $this->currencyConverter = $currencyConverter;
         $this->productManager = $productManager;
     }
 
     protected function configure(): void
     {
+        // TODO: Add option & write logic for test mode (`--test` option)
         $this
             ->addArgument('path', InputArgument::REQUIRED, 'Path to the CSV file');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
+        // TODO: Added in $failedProducts also which fall validation by validator
         $failedProducts = [];
         $createdProducts = [];
         $updatedProducts = [];
@@ -72,6 +77,7 @@ class ImportProductCsvCommand extends Command
             throw new RuntimeException(sprintf('File "%s not supported', $path), Command::FAILURE);
         }
 
+        // TODO: Handle unexpected exception from external API & service
         $currencyRates = $this->currencyConverter->getLastRates('GBP');
         $currentCurrencyRate = number_format($this->currencyConverter->extractCurrentRateForCurrency($currencyRates, 'USD'), 2);
 
@@ -99,8 +105,8 @@ class ImportProductCsvCommand extends Command
             $cost = trim($record['Cost in GBP']);
             $stock = trim($record['Stock']) !== '' ? (int)$record['Stock'] : null;
 
-            if ($this->containSymbols($cost)) {
-                $cost = (float) $this->clearSymbols($cost);
+            if (containSymbols($cost)) {
+                $cost = (float) clearSymbols($cost);
             } else {
                 $cost = (float) $cost * (float)$currentCurrencyRate;
             }
@@ -123,30 +129,27 @@ class ImportProductCsvCommand extends Command
                 $discontinued = new DateTimeImmutable();
             }
 
-            $existProduct = $this->productDataRepository->findOneBy(['strProductCode' => $record['Product Code']]);
+            $existProduct = $this->productManager
+                ->getRepository()
+                ->findOneBy(['strProductCode' => $record['Product Code']]);
 
-            $product = new TblProductData();
+            $attributes = [
+                'intProductDataId' => $existProduct->getIntProductDataId() ?? null,
+                'strProductName' => $record['Product Name'],
+                'strProductDesc' => $record['Product Description'],
+                'strProductCode' => $existProduct->getStrProductCode() ?? $record['Product Code'],
+                'cost' => $cost,
+                'stock' => $stock,
+                'dtmDiscontinued' => $discontinued,
+                'dtmAdded' => $existProduct->getDtmAdded() ?? new DateTimeImmutable()
+            ];
 
-            if (null !== $existProduct) {
-                $existProduct->setStrProductName($record['Product Name']);
-                $existProduct->setStrProductDesc($record['Product Description']);
-                $existProduct->setStrProductCode($existProduct->getStrProductCode());
-                $existProduct->setStock($stock);
-                $existProduct->setCost($cost);
-                $existProduct->setDtmDiscontinued($discontinued);
-                $this->productManager->save($existProduct);
+            $model = TblProductDataDTO::makeFromArray($attributes);
+            $this->productManager->save($model);
 
+            if (null !== $existProduct->getIntProductDataId()) {
                 $updatedProducts[] = $record['Product Code'];
             } else {
-                $product->setStrProductName($record['Product Name']);
-                $product->setStrProductDesc($record['Product Description']);
-                $product->setStrProductCode($record['Product Code']);
-                $product->setDtmDiscontinued($discontinued);
-                $product->setDtmAdded(new DateTimeImmutable());
-                $product->setCost($cost);
-                $product->setStock($stock);
-
-                $this->productManager->save($product);
                 $createdProducts[] = $record['Product Code'];
             }
         }
@@ -166,15 +169,5 @@ class ImportProductCsvCommand extends Command
     private function getSupportedExtensions(): array
     {
         return ['csv'];
-    }
-
-    private function clearSymbols(string $value): ?string
-    {
-        return preg_replace('/^"([\W^"])*([^\d,.]*)/', '', $value);
-    }
-
-    private function containSymbols(string $value): bool
-    {
-        return preg_match('/^"([\W^"])*([^\d,.]*)/', $value) > 0;
     }
 }

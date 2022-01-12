@@ -4,6 +4,9 @@ parameters:
     level: 9
     paths:
         - src
+        - tests
+    excludePaths:
+        - tests/bootstrap.php
     scanDirectories:
         - var/cache/dev/Symfony/Config
     checkGenericClassInNonGenericObjectType: false

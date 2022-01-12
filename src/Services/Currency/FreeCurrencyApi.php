@@ -27,11 +27,11 @@ class FreeCurrencyApi implements CurrencyApi
     ) {
 
         if ($freeCurrencyApiKey === '') {
-            throw new InvalidArgumentException('Not provided API key for freecurrency.com');
+            throw new InvalidArgumentException('Not provided API key for freecurrencyapi.net');
         }
 
         if ($freeCurrencyApiBaseUrl === '') {
-            throw new InvalidArgumentException('Not provided base URL for freecurrency.com');
+            throw new InvalidArgumentException('Not provided base URL for freecurrencyapi.net');
         }
 
         $this->freeCurrencyApiBaseUrl = $freeCurrencyApiBaseUrl;

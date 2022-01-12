@@ -6,6 +6,7 @@ namespace App\Entity;
 
 use App\Repository\TblProductDataRepository;
 use DateTimeImmutable;
+use DateTimeInterface;
 use Doctrine\ORM\Mapping as ORM;
 use Gedmo\Mapping\Annotation as Gedmo;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
@@ -50,18 +51,18 @@ class TblProductData
     private string $strProductCode;
 
     /**
-     * @var DateTimeImmutable|null
+     * @var \DateTimeInterface|null
      *
      * @ORM\Column(name="dtmAdded", type="datetime", nullable=true, options={"default": "NULL"})
      */
-    private ?DateTimeImmutable $dtmAdded;
+    private ?\DateTimeInterface $dtmAdded;
 
     /**
-     * @var DateTimeImmutable|null
+     * @var DateTimeInterface|null
      *
      * @ORM\Column(name="dtmDiscontinued", type="datetime", nullable=true, options={"default": "NULL"})
      */
-    private ?DateTimeImmutable $dtmDiscontinued;
+    private ?DateTimeInterface $dtmDiscontinued;
 
     /**
      * @var DateTimeImmutable
@@ -70,7 +71,7 @@ class TblProductData
      * @Gedmo\Timestampable(on="create")
      * @Gedmo\Timestampable(on="update")
      */
-    private DateTimeImmutable $stmTimestamp;
+    private DateTimeInterface $stmTimestamp;
 
     /**
      * @ORM\Column(name="cost", type="decimal", scale=2, precision=10)
@@ -183,41 +184,41 @@ class TblProductData
     }
 
     /**
-     * @return DateTimeImmutable|null
+     * @return DateTimeInterface|null
      */
-    public function getDtmAdded(): ?DateTimeImmutable
+    public function getDtmAdded(): ?DateTimeInterface
     {
         return $this->dtmAdded;
     }
 
     /**
-     * @param DateTimeImmutable $dtmAdded
+     * @param DateTimeInterface $dtmAdded
      */
-    public function setDtmAdded(DateTimeImmutable $dtmAdded): void
+    public function setDtmAdded(DateTimeInterface $dtmAdded): void
     {
         $this->dtmAdded = $dtmAdded;
     }
 
     /**
-     * @return DateTimeImmutable|null
+     * @return DateTimeInterface|null
      */
-    public function getDtmDiscontinued(): ?DateTimeImmutable
+    public function getDtmDiscontinued(): ?DateTimeInterface
     {
         return $this->dtmDiscontinued;
     }
 
     /**
-     * @param DateTimeImmutable|null $dtmDiscontinued
+     * @param DateTimeInterface|null $dtmDiscontinued
      */
-    public function setDtmDiscontinued(?DateTimeImmutable $dtmDiscontinued): void
+    public function setDtmDiscontinued(?DateTimeInterface $dtmDiscontinued): void
     {
         $this->dtmDiscontinued = $dtmDiscontinued;
     }
 
     /**
-     * @return DateTimeImmutable
+     * @return DateTimeInterface
      */
-    public function getStmTimestamp(): DateTimeImmutable
+    public function getStmTimestamp(): DateTimeInterface
     {
         return $this->stmTimestamp;
     }
