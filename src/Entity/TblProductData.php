@@ -51,11 +51,11 @@ class TblProductData
     private string $strProductCode;
 
     /**
-     * @var \DateTimeInterface|null
+     * @var DateTimeInterface|null
      *
      * @ORM\Column(name="dtmAdded", type="datetime", nullable=true, options={"default": "NULL"})
      */
-    private ?\DateTimeInterface $dtmAdded;
+    private ?DateTimeInterface $dtmAdded;
 
     /**
      * @var DateTimeInterface|null
