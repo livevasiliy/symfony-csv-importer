@@ -7,6 +7,7 @@ namespace App\Entity;
 use App\Repository\TblProductDataRepository;
 use DateTime;
 use Doctrine\ORM\Mapping as ORM;
+use Gedmo\Mapping\Annotation as Gedmo;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 
 /**
@@ -53,19 +54,21 @@ class TblProductData
      *
      * @ORM\Column(name="dtmAdded", type="datetime", nullable=true, options={"default": "NULL"})
      */
-    private ?DateTime $dtmAdded = null;
+    private ?DateTime $dtmAdded;
 
     /**
      * @var DateTime|null
      *
      * @ORM\Column(name="dtmDiscontinued", type="datetime", nullable=true, options={"default": "NULL"})
      */
-    private ?DateTime $dtmDiscontinued = null;
+    private ?DateTime $dtmDiscontinued;
 
     /**
      * @var DateTime
      *
      * @ORM\Column(name="stmTimestamp", type="datetime", nullable=false, options={"default": "current_timestamp()"})
+     * @Gedmo\Timestampable(on="create")
+     * @Gedmo\Timestampable(on="update")
      */
     private DateTime $stmTimestamp;
 
@@ -113,11 +116,6 @@ class TblProductData
     public function setStock(?int $stock): void
     {
         $this->stock = $stock;
-    }
-
-    public function __construct()
-    {
-        $this->stmTimestamp = new DateTime();
     }
 
     /**
@@ -193,9 +191,9 @@ class TblProductData
     }
 
     /**
-     * @param DateTime|null $dtmAdded
+     * @param DateTime $dtmAdded
      */
-    public function setDtmAdded(?DateTime $dtmAdded): void
+    public function setDtmAdded(DateTime $dtmAdded): void
     {
         $this->dtmAdded = $dtmAdded;
     }
@@ -222,13 +220,5 @@ class TblProductData
     public function getStmTimestamp(): DateTime
     {
         return $this->stmTimestamp;
-    }
-
-    /**
-     * @param DateTime $stmTimestamp
-     */
-    public function setStmTimestamp(DateTime $stmTimestamp): void
-    {
-        $this->stmTimestamp = $stmTimestamp;
     }
 }

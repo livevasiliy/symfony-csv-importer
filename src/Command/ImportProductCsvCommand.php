@@ -155,7 +155,7 @@ class ImportProductCsvCommand extends Command
 
         $io->success(sprintf('%d product(s) has been imported & %d has been updated.', count($createdProducts), count($updatedProducts)));
         $io->error(sprintf('%d product(s) has been failed to import', count($failedProducts)));
-        $io->error(sprintf('%d product(s) has been skipped to import', count($skippedProducts)));
+        $io->warning(sprintf('%d product(s) has been skipped to import', count($skippedProducts)));
 
         return Command::SUCCESS;
     }
