@@ -24,7 +24,7 @@ use function count;
 class ImportProductCsvCommand extends Command
 {
     private const MINIMUM_COST = 5;
-    private const MEDIUM_COST = 10;
+    private const MINIMUM_STOCK = 10;
     private const HIGH_COST = 1000;
 
     protected static $defaultName = 'app:import-products:csv';
@@ -108,10 +108,10 @@ class ImportProductCsvCommand extends Command
             $cost = (float) number_format($cost, 2);
 
             // If cost less that $5 and has less than 10 stock - not imported.
-            if ($cost < self::MINIMUM_COST && $stock < self::MEDIUM_COST) {
+            if ($cost < self::MINIMUM_COST && $stock < self::MINIMUM_STOCK) {
                 $skippedProducts[] = $record['Product Code'];
                 continue;
-                // Any stock which cost over $1000 - not imported
+            // Any stock which cost over $1000 - not imported
             } elseif ($cost > self::HIGH_COST) {
                 $skippedProducts[] = $record['Product Code'];
                 continue;
