@@ -10,13 +10,30 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 class FreeCurrencyApi implements CurrencyApi
 {
+    private const API_URL_LATEST_RATE = 'latest';
+
     private string $freeCurrencyApiBaseUrl;
     private string $freeCurrencyApiKey;
+
     private string $baseCurrency;
+
     private HttpClientInterface $httpClient;
 
-    public function __construct(HttpClientInterface $httpClient, string $freeCurrencyApiBaseUrl, string $freeCurrencyApiKey, string $baseCurrency = 'GBP')
-    {
+    public function __construct(
+        HttpClientInterface $httpClient,
+        string $freeCurrencyApiBaseUrl,
+        string $freeCurrencyApiKey,
+        string $baseCurrency = 'GBP'
+    ) {
+
+        if ($freeCurrencyApiKey === '') {
+            throw new InvalidArgumentException('Not provided API key for freecurrency.com');
+        }
+
+        if ($freeCurrencyApiBaseUrl === '') {
+            throw new InvalidArgumentException('Not provided base URL for freecurrency.com');
+        }
+
         $this->freeCurrencyApiBaseUrl = $freeCurrencyApiBaseUrl;
         $this->freeCurrencyApiKey = $freeCurrencyApiKey;
         $this->baseCurrency = $baseCurrency;
@@ -36,7 +53,7 @@ class FreeCurrencyApi implements CurrencyApi
      */
     public function getLastRates(?string $needleCurrency = null): array
     {
-        return $this->httpClient->request(Request::METHOD_GET, 'latest', [
+        return $this->httpClient->request(Request::METHOD_GET, self::API_URL_LATEST_RATE, [
             'query' => [
                 'apikey' => $this->freeCurrencyApiKey,
                 'base_currency' => $needleCurrency ?? $this->baseCurrency,
@@ -55,6 +72,7 @@ class FreeCurrencyApi implements CurrencyApi
         if (isset($currencyRates[$needleCurrency])) {
             return $currencyRates[$needleCurrency];
         }
+
         throw new InvalidArgumentException(sprintf('Cannot extract current rate for currency %s', $needleCurrency));
     }
 }

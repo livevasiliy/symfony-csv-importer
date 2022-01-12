@@ -1,0 +1,7 @@
+parameters:
+	ignoreErrors:
+		-
+			message: "#^Property App\\\\Entity\\\\TblProductData\\:\\:\\$stmTimestamp is never written, only read\\.$#"
+			count: 1
+			path: src/Entity/TblProductData.php
+
