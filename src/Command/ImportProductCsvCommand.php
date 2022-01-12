@@ -8,7 +8,7 @@ use App\Entity\TblProductData;
 use App\Repository\TblProductDataRepository;
 use App\Services\Currency\FreeCurrencyApi;
 use App\Services\Manager\ProductManager;
-use DateTime;
+use DateTimeImmutable;
 use League\Csv\Reader;
 use League\Csv\Exception as CsvException;
 use Symfony\Component\Console\Command\Command;
@@ -120,7 +120,7 @@ class ImportProductCsvCommand extends Command
             $discontinued = null;
 
             if (isset($record['Discontinued']) && $record['Discontinued'] === 'yes') {
-                $discontinued = new DateTime();
+                $discontinued = new DateTimeImmutable();
             }
 
             $existProduct = $this->productDataRepository->findOneBy(['strProductCode' => $record['Product Code']]);
@@ -142,7 +142,7 @@ class ImportProductCsvCommand extends Command
                 $product->setStrProductDesc($record['Product Description']);
                 $product->setStrProductCode($record['Product Code']);
                 $product->setDtmDiscontinued($discontinued);
-                $product->setDtmAdded(new DateTime());
+                $product->setDtmAdded(new DateTimeImmutable());
                 $product->setCost($cost);
                 $product->setStock($stock);
 

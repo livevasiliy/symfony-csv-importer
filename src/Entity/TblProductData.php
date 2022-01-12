@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Entity;
 
 use App\Repository\TblProductDataRepository;
-use DateTime;
+use DateTimeImmutable;
 use Doctrine\ORM\Mapping as ORM;
 use Gedmo\Mapping\Annotation as Gedmo;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
@@ -50,27 +50,27 @@ class TblProductData
     private string $strProductCode;
 
     /**
-     * @var DateTime|null
+     * @var DateTimeImmutable|null
      *
      * @ORM\Column(name="dtmAdded", type="datetime", nullable=true, options={"default": "NULL"})
      */
-    private ?DateTime $dtmAdded;
+    private ?DateTimeImmutable $dtmAdded;
 
     /**
-     * @var DateTime|null
+     * @var DateTimeImmutable|null
      *
      * @ORM\Column(name="dtmDiscontinued", type="datetime", nullable=true, options={"default": "NULL"})
      */
-    private ?DateTime $dtmDiscontinued;
+    private ?DateTimeImmutable $dtmDiscontinued;
 
     /**
-     * @var DateTime
+     * @var DateTimeImmutable
      *
      * @ORM\Column(name="stmTimestamp", type="datetime", nullable=false, options={"default": "current_timestamp()"})
      * @Gedmo\Timestampable(on="create")
      * @Gedmo\Timestampable(on="update")
      */
-    private DateTime $stmTimestamp;
+    private DateTimeImmutable $stmTimestamp;
 
     /**
      * @ORM\Column(name="cost", type="decimal", scale=2, precision=10)
@@ -183,41 +183,41 @@ class TblProductData
     }
 
     /**
-     * @return DateTime|null
+     * @return DateTimeImmutable|null
      */
-    public function getDtmAdded(): ?DateTime
+    public function getDtmAdded(): ?DateTimeImmutable
     {
         return $this->dtmAdded;
     }
 
     /**
-     * @param DateTime $dtmAdded
+     * @param DateTimeImmutable $dtmAdded
      */
-    public function setDtmAdded(DateTime $dtmAdded): void
+    public function setDtmAdded(DateTimeImmutable $dtmAdded): void
     {
         $this->dtmAdded = $dtmAdded;
     }
 
     /**
-     * @return DateTime|null
+     * @return DateTimeImmutable|null
      */
-    public function getDtmDiscontinued(): ?DateTime
+    public function getDtmDiscontinued(): ?DateTimeImmutable
     {
         return $this->dtmDiscontinued;
     }
 
     /**
-     * @param DateTime|null $dtmDiscontinued
+     * @param DateTimeImmutable|null $dtmDiscontinued
      */
-    public function setDtmDiscontinued(?DateTime $dtmDiscontinued): void
+    public function setDtmDiscontinued(?DateTimeImmutable $dtmDiscontinued): void
     {
         $this->dtmDiscontinued = $dtmDiscontinued;
     }
 
     /**
-     * @return DateTime
+     * @return DateTimeImmutable
      */
-    public function getStmTimestamp(): DateTime
+    public function getStmTimestamp(): DateTimeImmutable
     {
         return $this->stmTimestamp;
     }
