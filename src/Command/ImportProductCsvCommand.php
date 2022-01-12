@@ -21,8 +21,8 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Filesystem\Filesystem;
 use function in_array;
 use function count;
-use function clearSymbols;
-use function containSymbols;
+use function clearSymbolsFromDecimalString;
+use function containSymbolsInDecimalString;
 
 class ImportProductCsvCommand extends Command
 {
@@ -105,8 +105,8 @@ class ImportProductCsvCommand extends Command
             $cost = trim($record['Cost in GBP']);
             $stock = trim($record['Stock']) !== '' ? (int)$record['Stock'] : null;
 
-            if (containSymbols($cost)) {
-                $cost = (float) clearSymbols($cost);
+            if (containSymbolsInDecimalString($cost)) {
+                $cost = (float) clearSymbolsFromDecimalString($cost);
             } else {
                 $cost = (float) $cost * (float)$currentCurrencyRate;
             }
