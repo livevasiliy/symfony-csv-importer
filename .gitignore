@@ -1,8 +1,10 @@
 .env
 .php-cs-fixer.cache
+.php-cs-fixer.php
 .vscode
 .idea
 tools/*/vendor
+docker-composer.override.yml
 
 ###> symfony/framework-bundle ###
 /.env.local
@@ -23,3 +25,8 @@ tools/*/vendor
 /phpunit.xml
 .phpunit.result.cache
 ###< phpunit/phpunit ###
+
+###> friendsofphp/php-cs-fixer ###
+/.php-cs-fixer.php
+/.php-cs-fixer.cache
+###< friendsofphp/php-cs-fixer ###

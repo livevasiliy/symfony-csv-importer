@@ -5,17 +5,14 @@
     "composer/package-versions-deprecated": {
         "version": "1.11.99.4"
     },
-    "dama/doctrine-test-bundle": {
-        "version": "6.7",
-        "recipe": {
-            "repo": "github.com/symfony/recipes-contrib",
-            "branch": "master",
-            "version": "4.0",
-            "ref": "56eaa387b5e48ebcc7c95a893b47dfa1ad51449c"
-        },
-        "files": [
-            "config/packages/test/dama_doctrine_test_bundle.yaml"
-        ]
+    "composer/pcre": {
+        "version": "1.0.0"
+    },
+    "composer/semver": {
+        "version": "3.2.7"
+    },
+    "composer/xdebug-handler": {
+        "version": "2.0.4"
     },
     "doctrine/annotations": {
         "version": "1.13",
@@ -38,9 +35,6 @@
     "doctrine/common": {
         "version": "3.2.1"
     },
-    "doctrine/data-fixtures": {
-        "version": "1.5.1"
-    },
     "doctrine/dbal": {
         "version": "3.2.1"
     },
@@ -61,18 +55,6 @@
             "config/packages/test/doctrine.yaml",
             "src/Entity/.gitignore",
             "src/Repository/.gitignore"
-        ]
-    },
-    "doctrine/doctrine-fixtures-bundle": {
-        "version": "3.4",
-        "recipe": {
-            "repo": "github.com/symfony/recipes",
-            "branch": "master",
-            "version": "3.0",
-            "ref": "1f5514cfa15b947298df4d771e694e578d4c204d"
-        },
-        "files": [
-            "src/DataFixtures/AppFixtures.php"
         ]
     },
     "doctrine/doctrine-migrations-bundle": {
@@ -112,6 +94,18 @@
     "doctrine/sql-formatter": {
         "version": "1.1.2"
     },
+    "friendsofphp/php-cs-fixer": {
+        "version": "3.4",
+        "recipe": {
+            "repo": "github.com/symfony/recipes",
+            "branch": "master",
+            "version": "3.0",
+            "ref": "be2103eb4a20942e28a6dd87736669b757132435"
+        },
+        "files": [
+            ".php-cs-fixer.dist.php"
+        ]
+    },
     "friendsofphp/proxy-manager-lts": {
         "version": "v1.0.5"
     },
@@ -135,6 +129,9 @@
     },
     "phar-io/version": {
         "version": "3.1.0"
+    },
+    "php-cs-fixer/diff": {
+        "version": "v2.0.2"
     },
     "php-parallel-lint/php-console-color": {
         "version": "v0.3"
@@ -388,6 +385,9 @@
             "ref": "fadbfe33303a76e25cb63401050439aa9b1a9c7f"
         }
     },
+    "symfony/options-resolver": {
+        "version": "v5.4.0"
+    },
     "symfony/phpunit-bridge": {
         "version": "6.0",
         "recipe": {
@@ -420,6 +420,9 @@
     },
     "symfony/polyfill-php81": {
         "version": "v1.24.0"
+    },
+    "symfony/process": {
+        "version": "v5.4.2"
     },
     "symfony/proxy-manager-bridge": {
         "version": "v5.4.2"

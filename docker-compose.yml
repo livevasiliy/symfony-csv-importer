@@ -7,13 +7,14 @@ services:
       dockerfile: docker/php/Dockerfile
       target: symfony_php
     volumes:
-      - ./:/srv/app
+      - ./:/srv/app:rw,cached
   db:
-    build:
-      context: ./
-      dockerfile: docker/mysql/Dockerfile
+    image: mariadb:10.7
     command: --default-authentication-plugin=mysql_native_password
     environment:
-      MYSQL_ROOT_PASSWORD: password
-    ports:
-      - 3306:3306
+      MYSQL_ROOT_PASSWORD: ${DATABASE_ROOT_PASSWORD}
+        MYSQL_DATABASE: ${DATABASE_NAME}
+        MYSQL_USER: ${DATABASE_USER}
+        MYSQL_PASSWORD: ${DATABASE_PASSWORD}
+    cap_add:
+      - SYS_NICE

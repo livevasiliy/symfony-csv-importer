@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Tests\Services\Currency;
+namespace App\Tests\Unit\Services\Currency;
 
 use App\Services\Currency\FreeCurrencyApi;
 use Generator;
@@ -13,8 +13,10 @@ use Symfony\Component\HttpClient\Response\MockResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use function Safe\json_encode;
-use function Safe\json_decode;
 
+/**
+ * @group unit
+ */
 class FreeCurrencyApiTest extends TestCase
 {
     /**
@@ -26,11 +28,13 @@ class FreeCurrencyApiTest extends TestCase
         ?string $baseApiUrl,
         ?string $apiKey,
         ?string $baseCurrency,
+        ?string $requiredCurrency,
         bool $shouldThrowException,
         string $expectException,
         string $expectedExceptionMessage,
         string $exceptedMockResponse,
-        ?array $exceptedResponseData
+        ?array $exceptedResponseData,
+        ?string $expectRequestUrl
     ): void
     {
         $mockResponse = new MockResponse($exceptedMockResponse, [
@@ -59,12 +63,12 @@ class FreeCurrencyApiTest extends TestCase
         );
 
         // Action
-        $responseData = $freeCurrencyApiService->getLastRates('USD');
+        $responseData = $freeCurrencyApiService->getLastRates($requiredCurrency);
 
         // Assert
         static::assertSame(Request::METHOD_GET, $mockResponse->getRequestMethod());
         static::assertSame(
-            'https://freecurrencyapi.net/api/v2/latest?apikey=foo&base_currency=USD',
+            $expectRequestUrl,
             $mockResponse->getRequestUrl()
         );
         static::assertContains(
@@ -123,44 +127,65 @@ class FreeCurrencyApiTest extends TestCase
             'https://freecurrencyapi.net/api/v2/',
             'foo',
             'GBP',
+            'USD',
             false,
             '',
             '',
             $mockResponseJson,
-            $exceptedResponseData['data']
+            $exceptedResponseData['data'],
+            'https://freecurrencyapi.net/api/v2/latest?apikey=foo&base_currency=USD'
+        ];
+
+        yield 'Valid - pass all except requiredCurrency will be use instead of baseCurrency' => [
+            'https://freecurrencyapi.net/api/v2/',
+            'foo',
+            'GBP',
+            null,
+            false,
+            '',
+            '',
+            $mockResponseJson,
+            $exceptedResponseData['data'],
+            'https://freecurrencyapi.net/api/v2/latest?apikey=foo&base_currency=GBP'
         ];
 
         yield 'Invalid - pass all required parameters except base currency' => [
             'https://freecurrencyapi.net/api/v2/',
             'foo',
             '',
+            'USD',
             true,
             InvalidArgumentException::class,
             'Not provided base currency for freecurrencyapi.net',
             $mockResponseJson,
-            null
+            null,
+            'https://freecurrencyapi.net/api/v2/latest?apikey=foo&base_currency=USD'
         ];
 
         yield 'Invalid - pass all except base url' => [
             '',
             'foo',
             'GBP',
+            'USD',
             true,
             InvalidArgumentException::class,
             'Not provided base URL for freecurrencyapi.net',
             $mockResponseJson,
-            null
+            null,
+            'https://freecurrencyapi.net/api/v2/latest?apikey=foo&base_currency=USD'
         ];
 
         yield 'Invalid - pass all except apiKey' => [
             'https://freecurrencyapi.net/api/v2/',
             '',
             'GBP',
+            'USD',
             true,
             InvalidArgumentException::class,
             'Not provided API key for freecurrencyapi.net',
             $mockResponseJson,
-            null
+            null,
+            'https://freecurrencyapi.net/api/v2/latest?apikey=foo&base_currency=USD'
         ];
     }
 

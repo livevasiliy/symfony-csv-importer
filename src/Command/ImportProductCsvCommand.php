@@ -6,7 +6,6 @@ namespace App\Command;
 
 use App\DTO\TblProductDataDTO;
 use App\Entity\TblProductData;
-use App\Repository\TblProductDataRepository;
 use App\Services\Currency\FreeCurrencyApi;
 use App\Services\Manager\ProductManager;
 use DateTimeImmutable;
@@ -106,18 +105,18 @@ class ImportProductCsvCommand extends Command
             $stock = trim($record['Stock']) !== '' ? (int)$record['Stock'] : null;
 
             if (containSymbolsInDecimalString($cost)) {
-                $cost = (float) clearSymbolsFromDecimalString($cost);
+                $cost = (float)clearSymbolsFromDecimalString($cost);
             } else {
-                $cost = (float) $cost * (float)$currentCurrencyRate;
+                $cost = (float)$cost * (float)$currentCurrencyRate;
             }
 
-            $cost = (float) number_format($cost, 2);
+            $cost = (float)number_format($cost, 2);
 
             // If cost less that $5 and has less than 10 stock - not imported.
             if ($cost < self::MINIMUM_COST && $stock < self::MINIMUM_STOCK) {
                 $skippedProducts[] = $record['Product Code'];
                 continue;
-            // Any stock which cost over $1000 - not imported
+                // Any stock which cost over $1000 - not imported
             } elseif ($cost > self::HIGH_COST) {
                 $skippedProducts[] = $record['Product Code'];
                 continue;
@@ -133,23 +132,27 @@ class ImportProductCsvCommand extends Command
                 ->getRepository()
                 ->findOneBy(['strProductCode' => $record['Product Code']]);
 
-            $attributes = [
-                'intProductDataId' => $existProduct->getIntProductDataId() ?? null,
-                'strProductName' => $record['Product Name'],
-                'strProductDesc' => $record['Product Description'],
-                'strProductCode' => $existProduct->getStrProductCode() ?? $record['Product Code'],
-                'cost' => $cost,
-                'stock' => $stock,
-                'dtmDiscontinued' => $discontinued,
-                'dtmAdded' => $existProduct->getDtmAdded() ?? new DateTimeImmutable()
-            ];
+            $product = new TblProductData();
 
-            $model = TblProductDataDTO::makeFromArray($attributes);
-            $this->productManager->save($model);
-
-            if (null !== $existProduct->getIntProductDataId()) {
+            if (null !== $existProduct && $existProduct->getIntProductDataId()) {
+                $existProduct->setStrProductName($record['Product Name']);
+                $existProduct->setStrProductDesc($record['Product Description']);
+                $existProduct->setStrProductCode($existProduct->getStrProductCode());
+                $existProduct->setStock($stock);
+                $existProduct->setCost($cost);
+                $existProduct->setDtmDiscontinued($discontinued);
+                $this->productManager->save($existProduct);
                 $updatedProducts[] = $record['Product Code'];
             } else {
+                $product->setStrProductName($record['Product Name']);
+                $product->setStrProductDesc($record['Product Description']);
+                $product->setStrProductCode($record['Product Code']);
+                $product->setDtmDiscontinued($discontinued);
+                $product->setDtmAdded(new DateTimeImmutable());
+                $product->setCost($cost);
+                $product->setStock($stock);
+
+                $this->productManager->save($product);
                 $createdProducts[] = $record['Product Code'];
             }
         }

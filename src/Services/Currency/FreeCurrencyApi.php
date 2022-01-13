@@ -57,6 +57,10 @@ class FreeCurrencyApi implements CurrencyApi
      */
     public function getLastRates(?string $needleCurrency = null): array
     {
+        if ($needleCurrency === '') {
+            $needleCurrency = $this->baseCurrency;
+        }
+
         return $this->httpClient->request(Request::METHOD_GET, self::API_URL_LATEST_RATE, [
             'query' => [
                 'apikey' => $this->freeCurrencyApiKey,
