@@ -26,6 +26,10 @@ class FreeCurrencyApi implements CurrencyApi
         string $baseCurrency = 'GBP'
     ) {
 
+        if ($baseCurrency === '') {
+            throw new InvalidArgumentException('Not provided base currency for freecurrencyapi.net');
+        }
+
         if ($freeCurrencyApiKey === '') {
             throw new InvalidArgumentException('Not provided API key for freecurrencyapi.net');
         }

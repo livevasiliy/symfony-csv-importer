@@ -1,4 +1,6 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace App\Tests\Services\Currency;
 
@@ -11,23 +13,27 @@ use Symfony\Component\HttpClient\Response\MockResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use function Safe\json_encode;
+use function Safe\json_decode;
 
 class FreeCurrencyApiTest extends TestCase
 {
-    public function test_it_should_retrieve_last_rates_for_usd_currency(): void
+    /**
+     * @dataProvider extractLastRatesProvider
+     *
+     * @param array<string, float> $exceptedResponseData
+     */
+    public function test_it_should_retrieve_last_rates_for_usd_currency(
+        ?string $baseApiUrl,
+        ?string $apiKey,
+        ?string $baseCurrency,
+        bool $shouldThrowException,
+        string $expectException,
+        string $expectedExceptionMessage,
+        string $exceptedMockResponse,
+        ?array $exceptedResponseData
+    ): void
     {
-        $exceptedResponseData = [
-            'query' => [
-                'apiKey' => '3asdjakldjl-a424-4214wdsadsad',
-                'base_currency' => 'GBP',
-                'timestamp' => 1642001543
-            ],
-            'data' => [
-                'GBP' => 0.73351
-            ]
-        ];
-        $mockResponseJson = json_encode($exceptedResponseData, JSON_THROW_ON_ERROR);
-        $mockResponse = new MockResponse($mockResponseJson, [
+        $mockResponse = new MockResponse($exceptedMockResponse, [
             'http_code' => Response::HTTP_OK,
             'response_headers' => ['Content-Type' => 'application/json']
         ]);
@@ -40,11 +46,16 @@ class FreeCurrencyApiTest extends TestCase
             ],
         ]);
 
+        if ($shouldThrowException) {
+            static::expectException($expectException); /* @phpstan-ignore-line */
+            static::expectExceptionMessage($expectedExceptionMessage);
+        }
+
         $freeCurrencyApiService = new FreeCurrencyApi(
             $mockHttpClient,
-            'https://freecurrencyapi.net/api/v2/',
-            'foo',
-            'GBP'
+            $baseApiUrl,    /* @phpstan-ignore-line */
+            $apiKey,        /* @phpstan-ignore-line */
+            $baseCurrency, /* @phpstan-ignore-line */
         );
 
         // Action
@@ -60,17 +71,14 @@ class FreeCurrencyApiTest extends TestCase
             'Content-Type: application/json',
             $mockResponse->getRequestOptions()['headers']
         );
-        static::assertSame($responseData, $exceptedResponseData['data']);
+
+        static::assertSame($responseData, $exceptedResponseData);
     }
 
     /**
      * @dataProvider extractRateProvider
      *
      * @param array<string, float> $currencyRates
-     * @param string $requiredCurrency
-     * @param float|null $exceptedExtractedValue
-     * @param bool $shouldThrowException
-     * @param string $expectedExceptionMessage
      */
     public function test_it_should_extract_rates_for_usd_currency(
         array $currencyRates,
@@ -94,6 +102,66 @@ class FreeCurrencyApiTest extends TestCase
         $result = $freeCurrencyApiService->extractCurrentRateForCurrency($currencyRates, $requiredCurrency);
 
         static::assertSame($result, $exceptedExtractedValue);
+    }
+
+    public function extractLastRatesProvider(): Generator
+    {
+        $exceptedResponseData = [
+            'query' => [
+                'apiKey' => '3asdjakldjl-a424-4214wdsadsad',
+                'base_currency' => 'GBP',
+                'timestamp' => 1642001543
+            ],
+            'data' => [
+                'GBP' => 0.73351
+            ]
+        ];
+
+        $mockResponseJson = json_encode($exceptedResponseData, JSON_THROW_ON_ERROR);
+
+        yield 'Valid - pass all required parameters' => [
+            'https://freecurrencyapi.net/api/v2/',
+            'foo',
+            'GBP',
+            false,
+            '',
+            '',
+            $mockResponseJson,
+            $exceptedResponseData['data']
+        ];
+
+        yield 'Invalid - pass all required parameters except base currency' => [
+            'https://freecurrencyapi.net/api/v2/',
+            'foo',
+            '',
+            true,
+            InvalidArgumentException::class,
+            'Not provided base currency for freecurrencyapi.net',
+            $mockResponseJson,
+            null
+        ];
+
+        yield 'Invalid - pass all except base url' => [
+            '',
+            'foo',
+            'GBP',
+            true,
+            InvalidArgumentException::class,
+            'Not provided base URL for freecurrencyapi.net',
+            $mockResponseJson,
+            null
+        ];
+
+        yield 'Invalid - pass all except apiKey' => [
+            'https://freecurrencyapi.net/api/v2/',
+            '',
+            'GBP',
+            true,
+            InvalidArgumentException::class,
+            'Not provided API key for freecurrencyapi.net',
+            $mockResponseJson,
+            null
+        ];
     }
 
     public function extractRateProvider(): Generator
@@ -131,6 +199,4 @@ class FreeCurrencyApiTest extends TestCase
             'Cannot extract current rate for currency RUB'
         ];
     }
-
-    // TODO: Coverage test case when throw exception from constructor
 }
