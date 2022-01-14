@@ -6,8 +6,10 @@ use App\Command\ImportProductCsvCommand;
 use App\Entity\Product;
 use App\Tests\ReflectionClass;
 use Doctrine\ORM\EntityManagerInterface;
+use Generator;
 use Symfony\Bundle\FrameworkBundle\Console\Application;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
+use Symfony\Component\Console\Exception\RuntimeException;
 use Symfony\Component\Console\Tester\CommandTester;
 
 /**
@@ -42,6 +44,30 @@ class ImportProductCsvCommandTest extends KernelTestCase
 
         $this->assertStringContainsString(sprintf('successfully created product %d & %d has been updated', 2, 1), $output);
         $this->assertSame(0, $commandTester->getStatusCode());
+    }
+
+    /**
+     * @dataProvider failedDataProvider
+     */
+    public function test_it_should_falled($arguments, $expectCode, $expectMessage): void
+    {
+        $command = $this->application->find('app:import-products:csv');
+        $commandTester = new CommandTester($command);
+        $commandTester->execute($arguments);
+        $output = $commandTester->getDisplay();
+
+        $this->assertSame($expectCode, $commandTester->getStatusCode());
+        $this->assertStringContainsString($expectMessage, $output);
+    }
+
+    public function test_it_should_throw_runtime_exception(): void
+    {
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Not enough arguments (missing: "path").');
+
+        $command = $this->application->find('app:import-products:csv');
+        $commandTester = new CommandTester($command);
+        $commandTester->execute([]);
     }
 
     public function test_it_should_success_serialization(): void
@@ -117,5 +143,20 @@ class ImportProductCsvCommandTest extends KernelTestCase
         ]);
 
         self::assertSame(null, $updateProductMock);
+    }
+
+    private function failedDataProvider(): Generator
+    {
+        yield 'Valid - falled not exist requested file' => [
+            ['path' => 'tests/data/a.csv'],
+            1,
+            sprintf('[ERROR] File "%s" does not exist', 'tests/data/a.csv')
+        ];
+
+        yield 'Valid - falled requested file has invalid extension' => [
+            ['path' => 'tests/data/invalid.json'],
+            2,
+            sprintf('[ERROR] Not a valid extension for file %s required .%s.', 'tests/data/invalid.json', 'csv')
+        ];
     }
 }
