@@ -1,0 +1,10 @@
+[
+  {
+    "Product Code": "P0001",
+    "Product Name": "TV",
+    "Product Description": "32” Tv",
+    "Stock": 10,
+    "Cost in GBP": 399.99,
+    "Discontinued": null
+  }
+]

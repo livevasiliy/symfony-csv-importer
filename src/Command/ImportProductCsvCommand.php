@@ -7,6 +7,7 @@ namespace App\Command;
 use App\Entity\Product;
 use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
+use InvalidArgumentException;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -74,13 +75,6 @@ class ImportProductCsvCommand extends Command
             return Command::FAILURE;
         }
 
-        // Check extension required file SHOULD be `.csv`
-        if (!in_array(pathinfo($file, PATHINFO_EXTENSION), [self::REQUIRED_EXTENSION], true)) {
-            $io->error(sprintf('Not a valid extension for file %s required .%s.', $file, self::REQUIRED_EXTENSION));
-
-            return Command::INVALID;
-        }
-
         // Serialize got file to array
         $products = $this->getCsvRowAsArrays($file);
 
@@ -143,11 +137,16 @@ class ImportProductCsvCommand extends Command
         return Command::SUCCESS;
     }
 
-    private function getCsvRowAsArrays(string $path): array
+    private function getCsvRowAsArrays(string $file): array
     {
-        $decoder = new Serializer([new ObjectNormalizer()], [new CsvEncoder()]);
+        // Check extension required file SHOULD be `.csv`
+        if (in_array(pathinfo($file, PATHINFO_EXTENSION), [self::REQUIRED_EXTENSION], true)) {
+            $decoder = new Serializer([new ObjectNormalizer()], [new CsvEncoder()]);
 
-        return $decoder->decode(file_get_contents($path), 'csv');
+            return $decoder->decode(file_get_contents($file), 'csv');
+        }
+
+        throw new InvalidArgumentException(sprintf('Not a valid extension for file %s required .%s.', $file, self::REQUIRED_EXTENSION));
     }
 
     /**

@@ -7,6 +7,7 @@ use App\Entity\Product;
 use App\Tests\ReflectionClass;
 use Doctrine\ORM\EntityManagerInterface;
 use Generator;
+use InvalidArgumentException;
 use Symfony\Bundle\FrameworkBundle\Console\Application;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Symfony\Component\Console\Exception\RuntimeException;
@@ -46,18 +47,14 @@ class ImportProductCsvCommandTest extends KernelTestCase
         $this->assertSame(0, $commandTester->getStatusCode());
     }
 
-    /**
-     * @dataProvider failedDataProvider
-     */
-    public function test_it_should_falled($arguments, $expectCode, $expectMessage): void
+    public function test_it_should_throw_invalid_argument_exception(): void
     {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage(sprintf('Not a valid extension for file %s required .%s.', 'tests/data/invalid.json', 'csv'));
+
         $command = $this->application->find('app:import-products:csv');
         $commandTester = new CommandTester($command);
-        $commandTester->execute($arguments);
-        $output = $commandTester->getDisplay();
-
-        $this->assertSame($expectCode, $commandTester->getStatusCode());
-        $this->assertStringContainsString($expectMessage, $output);
+        $commandTester->execute(['path' => 'tests/data/invalid.json']);
     }
 
     public function test_it_should_throw_runtime_exception(): void
@@ -148,9 +145,9 @@ class ImportProductCsvCommandTest extends KernelTestCase
     private function failedDataProvider(): Generator
     {
         yield 'Valid - falled not exist requested file' => [
-            ['path' => 'tests/data/a.csv'],
+            [],
             1,
-            sprintf('[ERROR] File "%s" does not exist', 'tests/data/a.csv')
+
         ];
 
         yield 'Valid - falled requested file has invalid extension' => [
