@@ -47,7 +47,7 @@ class ImportProductCsvCommand extends Command
     {
         $this
             ->addArgument('path', InputArgument::REQUIRED, 'Path to CSV file')
-            ->addOption('test', 't', InputOption::VALUE_OPTIONAL, 'Run in test mode')
+            ->addOption('test', 't', InputOption::VALUE_NONE, 'Run in test mode')
         ;
     }
 
@@ -65,6 +65,9 @@ class ImportProductCsvCommand extends Command
 
         /** @var string $file */
         $file = $input->getArgument('path');
+
+        /** @var bool $testMode */
+        $testMode = $input->getOption('test');
 
         // First exists required file
         $filesystem = new Filesystem();
@@ -98,7 +101,6 @@ class ImportProductCsvCommand extends Command
 
             $cost = (float)number_format((float) $cost, 2);
 
-
             // Check some import rules
             if ($cost < self::MINIMUM_COST && $stock < self::MINIMUM_STOCK) {
                 $skippedProducts++;
@@ -116,19 +118,20 @@ class ImportProductCsvCommand extends Command
 
             /** @var Product $existProduct */
             if ($existProduct = $productManager->findOneBy(['strProductCode' => $row['Product Code']])) {
-                $this->updateProduct($existProduct, $row, $discontinued, $cost, $stock);
+                if ($testMode === false) {
+                    $this->updateProduct($existProduct, $row, $discontinued, $cost, $stock);
+                }
                 $updateProducts++;
 
                 continue;
             }
             // Create new records IF matching records not found in DB
-            $this->createProduct($row, $discontinued, $cost, $stock);
+            if ($testMode === false) {
+                $this->createProduct($row, $discontinued, $cost, $stock);
+            }
 
             $createProduct++;
         }
-
-        // Todo: IF enable test mode, we not execute prepare early SQL by Doctrine.
-
 
         // Return report
         $io->success(sprintf('successfully created product %d & %d has been updated', $createProduct, $updateProducts));
