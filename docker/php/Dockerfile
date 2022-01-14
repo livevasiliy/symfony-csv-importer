@@ -3,7 +3,7 @@
 # https://docs.docker.com/compose/compose-file/#target
 
 # https://docs.docker.com/engine/reference/builder/#understand-how-arg-and-from-interact
-ARG PHP_VERSION=7.4
+ARG PHP_VERSION=8.1
 
 # "php" stage
 FROM php:${PHP_VERSION}-fpm-alpine AS symfony_php
@@ -25,7 +25,7 @@ RUN apk add --no-cache \
 ENV LD_PRELOAD /usr/lib/preloadable_libiconv.so
 
 RUN chmod +x /usr/local/bin/install-php-extensions && \
-    install-php-extensions gd xdebug pdo_mysql
+    install-php-extensions pdo_mysql
 
 ARG APCU_VERSION=5.1.21
 RUN set -eux; \
@@ -80,6 +80,10 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # https://getcomposer.org/doc/03-cli.md#composer-allow-superuser
 ENV COMPOSER_ALLOW_SUPERUSER=1
 
+# Install Symfony Flex
+RUN set -eux; \
+	composer global require "symfony/flex" --prefer-dist --no-progress --no-suggest --classmap-authoritative; \
+	composer clear-cache
 ENV PATH="${PATH}:/root/.composer/vendor/bin"
 
 WORKDIR /srv/app

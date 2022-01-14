@@ -4,173 +4,190 @@ declare(strict_types=1);
 
 namespace App\Command;
 
-use App\DTO\TblProductDataDTO;
-use App\Entity\TblProductData;
-use App\Services\Currency\FreeCurrencyApi;
-use App\Services\Manager\ProductManager;
+use App\Entity\Product;
 use DateTimeImmutable;
-use League\Csv\Reader;
-use League\Csv\Exception as CsvException;
+use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
-use Symfony\Component\Console\Exception\RuntimeException;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Filesystem\Filesystem;
-use function in_array;
-use function count;
-use function clearSymbolsFromDecimalString;
-use function containSymbolsInDecimalString;
+use Symfony\Component\Serializer\Encoder\CsvEncoder;
+use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
+use Symfony\Component\Serializer\Serializer;
 
+
+#[AsCommand(
+    name: 'app:import-products:csv',
+    description: 'Import products from CSV',
+)]
 class ImportProductCsvCommand extends Command
 {
-    // TODO: Cover mock tests
+    private const REQUIRED_EXTENSION = 'csv';
 
     private const MINIMUM_COST = 5;
     private const MINIMUM_STOCK = 10;
     private const HIGH_COST = 1000;
 
-    protected static $defaultName = 'app:import-products:csv';
-    protected static $defaultDescription = 'Import products from CSV';
+    private EntityManagerInterface $entityManager;
 
-    private FreeCurrencyApi $currencyConverter;
-    private ProductManager $productManager;
-
-    public function __construct(ProductManager $productManager, FreeCurrencyApi $currencyConverter)
+    public function __construct(EntityManagerInterface $entityManager)
     {
-        parent::__construct();
+        $this->entityManager = $entityManager;
 
-        $this->currencyConverter = $currencyConverter;
-        $this->productManager = $productManager;
+        parent::__construct();
     }
+
 
     protected function configure(): void
     {
-        // TODO: Add option & write logic for test mode (`--test` option)
         $this
-            ->addArgument('path', InputArgument::REQUIRED, 'Path to the CSV file');
+            ->addArgument('path', InputArgument::REQUIRED, 'Path to CSV file')
+            ->addOption('test', 't', InputOption::VALUE_OPTIONAL, 'Run in test mode')
+        ;
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        // TODO: Added in $failedProducts also which fall validation by validator
+        // Initialize
+        $productManager = $this->entityManager->getRepository(Product::class);
+
+        $updateProducts = 0;
+        $createProduct = 0;
         $failedProducts = [];
-        $createdProducts = [];
-        $updatedProducts = [];
-        $skippedProducts = [];
+        $skippedProducts = 0;
 
         $io = new SymfonyStyle($input, $output);
 
-        /**
-         * @phpstan-var string
-         * @var string $path
-         */
-        $path = $input->getArgument('path');
+        /** @var string $file */
+        $file = $input->getArgument('path');
 
+        // First exists required file
         $filesystem = new Filesystem();
 
-        if (!$filesystem->exists($path)) {
-            throw new RuntimeException(sprintf('File "%s" does not exist', $path), Command::FAILURE);
-        } elseif (!in_array(pathinfo($path, PATHINFO_EXTENSION), $this->getSupportedExtensions(), true)) {
-            throw new RuntimeException(sprintf('File "%s not supported', $path), Command::FAILURE);
+        if (!$filesystem->exists($file)) {
+            $io->error(sprintf('File "%s" does not exist', $file));
+
+            return Command::FAILURE;
         }
 
-        // TODO: Handle unexpected exception from external API & service
-        $currencyRates = $this->currencyConverter->getLastRates('GBP');
-        $currentCurrencyRate = number_format($this->currencyConverter->extractCurrentRateForCurrency($currencyRates, 'USD'), 2);
+        // Check extension required file SHOULD be `.csv`
+        if (!in_array(pathinfo($file, PATHINFO_EXTENSION), [self::REQUIRED_EXTENSION], true)) {
+            $io->error(sprintf('Not a valid extension for file %s required .%s.', $file, self::REQUIRED_EXTENSION));
 
-        try {
-            $csv = Reader::createFromPath($path);
-            $csv->setHeaderOffset(0);
-        } catch (CsvException $e) {
-            throw new RuntimeException($e->getMessage(), Command::FAILURE, $e);
+            return Command::INVALID;
         }
 
-        $records = $csv->getRecords();
+        // Serialize got file to array
+        $products = $this->getCsvRowAsArrays($file);
 
-        $processBar = $io->createProgressBar(count(iterator_to_array($records)));
-        $processBar->start();
+        // Loop over records
+        foreach ($products as $row) {
 
-        foreach ($records as $record) {
-            if (!isset($record['Cost in GBP'])) {
-                $failedProducts[$record['Product Code']][] = 'Invalid cost in GBP';
+            if (!isset($row['Cost in GBP'])) {
+                $failedProducts[$row['Product Code']][] = 'Invalid cost in GBP';
                 continue;
-            } else if (!isset($record['Stock'])) {
-                $failedProducts[$record['Product Code']][] = 'Invalid stock';
+            } else if (!isset($row['Stock'])) {
+                $failedProducts[$row['Product Code']][] = 'Invalid stock';
                 continue;
             }
 
-            $cost = trim($record['Cost in GBP']);
-            $stock = trim($record['Stock']) !== '' ? (int)$record['Stock'] : null;
+            $cost = trim($row['Cost in GBP']);
+            $stock = trim($row['Stock']) !== '' ? (int)$row['Stock'] : null;
 
             if (containSymbolsInDecimalString($cost)) {
                 $cost = (float)clearSymbolsFromDecimalString($cost);
-            } else {
-                $cost = (float)$cost * (float)$currentCurrencyRate;
             }
 
-            $cost = (float)number_format($cost, 2);
+            $cost = (float)number_format((float) $cost, 2);
 
-            // If cost less that $5 and has less than 10 stock - not imported.
+
+            // Check some import rules
             if ($cost < self::MINIMUM_COST && $stock < self::MINIMUM_STOCK) {
-                $skippedProducts[] = $record['Product Code'];
+                $skippedProducts++;
                 continue;
-                // Any stock which cost over $1000 - not imported
             } elseif ($cost > self::HIGH_COST) {
-                $skippedProducts[] = $record['Product Code'];
+                $skippedProducts++;
                 continue;
             }
-            // Any stock marked as discounted - imported with current datetime
-            $discontinued = null;
 
-            if (isset($record['Discontinued']) && $record['Discontinued'] === 'yes') {
-                $discontinued = new DateTimeImmutable();
+            $discontinued = isset($row['Discontinued']) && $row['Discontinued'] === 'yes'
+                ? new DateTimeImmutable()
+                : null;
+
+            // Update IF matching records found in DB
+
+            /** @var Product $existProduct */
+            if ($existProduct = $productManager->findOneBy(['strProductCode' => $row['Product Code']])) {
+                $this->updateProduct($existProduct, $row, $discontinued, $cost, $stock);
+                $updateProducts++;
+
+                continue;
             }
+            // Create new records IF matching records not found in DB
+            $this->createProduct($row, $discontinued, $cost, $stock);
 
-            $existProduct = $this->productManager
-                ->getRepository()
-                ->findOneBy(['strProductCode' => $record['Product Code']]);
-
-            $product = new TblProductData();
-
-            if (null !== $existProduct && $existProduct->getIntProductDataId()) {
-                $existProduct->setStrProductName($record['Product Name']);
-                $existProduct->setStrProductDesc($record['Product Description']);
-                $existProduct->setStrProductCode($existProduct->getStrProductCode());
-                $existProduct->setStock($stock);
-                $existProduct->setCost($cost);
-                $existProduct->setDtmDiscontinued($discontinued);
-                $this->productManager->save($existProduct);
-                $updatedProducts[] = $record['Product Code'];
-            } else {
-                $product->setStrProductName($record['Product Name']);
-                $product->setStrProductDesc($record['Product Description']);
-                $product->setStrProductCode($record['Product Code']);
-                $product->setDtmDiscontinued($discontinued);
-                $product->setDtmAdded(new DateTimeImmutable());
-                $product->setCost($cost);
-                $product->setStock($stock);
-
-                $this->productManager->save($product);
-                $createdProducts[] = $record['Product Code'];
-            }
+            $createProduct++;
         }
 
-        $processBar->finish();
+        // Todo: IF enable test mode, we not execute prepare early SQL by Doctrine.
 
-        $io->success(sprintf('%d product(s) has been imported & %d has been updated.', count($createdProducts), count($updatedProducts)));
-        $io->error(sprintf('%d product(s) has been failed to import', count($failedProducts)));
-        $io->warning(sprintf('%d product(s) has been skipped to import', count($skippedProducts)));
 
+        // Return report
+        $io->success(sprintf('successfully created product %d & %d has been updated', $createProduct, $updateProducts));
+
+        // Exit
         return Command::SUCCESS;
     }
 
-    /**
-     * @return string[]
-     */
-    private function getSupportedExtensions(): array
+    private function getCsvRowAsArrays(string $path): array
     {
-        return ['csv'];
+        $decoder = new Serializer([new ObjectNormalizer()], [new CsvEncoder()]);
+
+        return $decoder->decode(file_get_contents($path), 'csv');
+    }
+
+    /**
+     * @param Product $existProduct
+     * @param array $row
+     * @param DateTimeImmutable|null $discontinued
+     * @param float $cost
+     * @param int|null $stock
+     */
+    protected function updateProduct(Product $existProduct, array $row, ?DateTimeImmutable $discontinued, float $cost, ?int $stock): void
+    {
+        $existProduct->setStrProductName($row['Product Name']);
+        $existProduct->setStrProductDesc($row['Product Description']);
+        $existProduct->setStrProductCode($existProduct->getStrProductCode());
+        $existProduct->setStock($stock);
+        $existProduct->setCost($cost);
+        $existProduct->setDtmDiscontinued($discontinued);
+
+        $this->entityManager->persist($existProduct);
+        $this->entityManager->flush();
+    }
+
+    /**
+     * @param array $row
+     * @param DateTimeImmutable|null $discontinued
+     * @param float $cost
+     * @param int|null $stock
+     */
+    protected function createProduct(array $row, ?DateTimeImmutable $discontinued, float $cost, ?int $stock): void
+    {
+        $product = new Product();
+        $product->setStrProductName($row['Product Name']);
+        $product->setStrProductDesc($row['Product Description']);
+        $product->setStrProductCode($row['Product Code']);
+        $product->setStock($stock);
+        $product->setCost($cost);
+        $product->setDtmDiscontinued($discontinued);
+        $product->setDtmAdded(new DateTimeImmutable());
+
+        $this->entityManager->persist($product);
+        $this->entityManager->flush();
     }
 }

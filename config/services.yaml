@@ -20,8 +20,4 @@ services:
             - '../src/Entity/'
             - '../src/Kernel.php'
             - '../src/Tests/'
-
-    App\Services\Currency\FreeCurrencyApi:
-        arguments:
-            $freeCurrencyApiBaseUrl: '%env(FREE_CURRENCY_BASE_URL)%'
-            $freeCurrencyApiKey: '%env(FREE_CURRENCY_API_KEY)%' 
+            - '../src/functions.php'
