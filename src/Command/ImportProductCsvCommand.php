@@ -157,7 +157,7 @@ class ImportProductCsvCommand extends Command
      * @param float $cost
      * @param int|null $stock
      */
-    protected function updateProduct(Product $existProduct, array $row, ?DateTimeImmutable $discontinued, float $cost, ?int $stock): void
+    private function updateProduct(Product $existProduct, array $row, ?DateTimeImmutable $discontinued, float $cost, ?int $stock): void
     {
         $existProduct->setStrProductName($row['Product Name']);
         $existProduct->setStrProductDesc($row['Product Description']);
@@ -176,7 +176,7 @@ class ImportProductCsvCommand extends Command
      * @param float $cost
      * @param int|null $stock
      */
-    protected function createProduct(array $row, ?DateTimeImmutable $discontinued, float $cost, ?int $stock): void
+    private function createProduct(array $row, ?DateTimeImmutable $discontinued, float $cost, ?int $stock): void
     {
         $product = new Product();
         $product->setStrProductName($row['Product Name']);
